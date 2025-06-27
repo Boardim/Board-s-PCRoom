@@ -1,0 +1,250 @@
+저와, GPT의 대화 1번씩입니다. 
+
+저 : 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class com.boardpcroom.ui.panel.MainScreenLoginPanel extends JPanel{
+    private JLabel welcomeLabel = new JLabel();
+    public com.boardpcroom.ui.panel.MainScreenLoginPanel() {
+        setBackground(new Color(185,233,251));
+        setLayout(null);
+    }
+
+    void updateDesign() {
+        if(!com.boardpcroom.ui.frame.MainScreenFrame.isLogin) updateFalseDesign();
+        else updateTrueDesign();
+    }
+
+    void updateFalseDesign() {
+
+    }
+
+    void updateTrueDesign() {
+
+    }
+
+    private class loginButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            com.boardpcroom.ui.dialog.LoginDialog loginF = new com.boardpcroom.ui.dialog.LoginDialog((JFrame)getTopLevelAncestor());
+            com.boardpcroom.model.User user = loginF.getLoggedInUser();
+            if(user == null) {
+                System.out.println("Error : com.boardpcroom.ui.dialog.LoginDialog user returning error");
+            }
+            else {
+                com.boardpcroom.ui.frame.MainScreenFrame.isLogin = true;
+                com.boardpcroom.ui.frame.MainScreenFrame.currentUser = user;
+
+                System.out.println("Login Complete");
+            }
+        }
+    }
+}
+해당 코드에서, 이미지에 보이는 것 처럼(보고서에서의 이미지) 창을 구현할거야. 디자인좀 해줘
+
+ChatGPT의 말:
+
+13초 동안 생각함
+아래 예시는 com.boardpcroom.ui.panel.MainScreenLoginPanel 을 로그인 전·후 두 가지 디자인으로 완성한 코드입니다. null layout 을 유지하면서, 이미지와 텍스트를 정확한 위치에 배치했고, 로그인 상태에 따라 보여줄 컴포넌트를 토글하도록 했습니다.
+
+java
+복사
+편집
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class com.boardpcroom.ui.panel.MainScreenLoginPanel extends JPanel {
+    // 공통 컴포넌트
+    private JLabel welcomeLabel;
+    private JSeparator separator;
+
+    // 로그인 전
+    private JButton loginButton;
+
+    // 로그인 후
+    private JPanel avatarPanel;
+    private JLabel avatarIcon, usernameLabel;
+    private JPanel timeInfoPanel, timeValuePanel;
+    private JLabel timeIcon, timeText, timeValueLabel;
+    private JButton timePlusButton;
+    private JPanel chargeInfoPanel, chargeActionPanel;
+    private JLabel chargeIcon, chargeText;
+    private JButton chargeButton;
+    private JButton logoutButton;
+
+    public com.boardpcroom.ui.panel.MainScreenLoginPanel() {
+        setLayout(null);
+        setBackground(new Color(185, 233, 251));
+        setOpaque(true);
+        setBounds(0, 0, 350, 400);
+
+        initCommon();
+        initBeforeLogin();
+        initAfterLogin();
+        updateDesign();
+    }
+
+    private void initCommon() {
+        // 상단 Welcome 텍스트
+        welcomeLabel = new JLabel("Welcome!");
+        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        welcomeLabel.setBounds(16, 16, 200, 30);
+        add(welcomeLabel);
+
+        // 구분선
+        separator = new JSeparator();
+        separator.setBounds(16, 200, 318, 2);
+        add(separator);
+    }
+
+    private void initBeforeLogin() {
+        // 로그인 전 버튼 하나만
+        loginButton = new JButton("LOGIN");
+        loginButton.setFont(new Font("SansSerif", Font.BOLD, 18));
+        loginButton.setBackground(new Color(0, 174, 240));
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFocusPainted(false);
+        loginButton.setBounds(100, 150, 150, 40);
+        loginButton.addActionListener(new loginButtonListener());
+        add(loginButton);
+    }
+
+    private void initAfterLogin() {
+        // 1) 아바타 영역
+        avatarPanel = new JPanel(null);
+        avatarPanel.setBackground(new Color(209, 239, 255));
+        avatarPanel.setBounds(16, 58, 318, 120);
+
+        avatarIcon = new JLabel(new ImageIcon("resources/user_icon.png"));
+        avatarIcon.setBounds(110, 8, 100, 80);
+        avatarPanel.add(avatarIcon);
+
+        usernameLabel = new JLabel("USERABCDEF", SwingConstants.CENTER);
+        usernameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        usernameLabel.setBounds(0, 90, 318, 20);
+        avatarPanel.add(usernameLabel);
+
+        add(avatarPanel);
+
+        // 2) 시간 정보
+        // 2-1) 아이콘 + 텍스트
+        timeInfoPanel = new JPanel(null);
+        timeInfoPanel.setBackground(Color.WHITE);
+        timeInfoPanel.setBounds(16, 216, 100, 80);
+        timeIcon = new JLabel(new ImageIcon("resources/clock_icon.png"));
+        timeIcon.setBounds(30, 8, 40, 40);
+        timeText = new JLabel("Time Left", SwingConstants.CENTER);
+        timeText.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        timeText.setBounds(0, 52, 100, 16);
+        timeInfoPanel.add(timeIcon);
+        timeInfoPanel.add(timeText);
+        add(timeInfoPanel);
+
+        // 2-2) 시간 값 + 추가 버튼
+        timeValuePanel = new JPanel(null);
+        timeValuePanel.setBackground(new Color(0, 174, 240));
+        timeValuePanel.setBounds(122, 216, 140, 80);
+        timeValueLabel = new JLabel("99 : 59", SwingConstants.CENTER);
+        timeValueLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        timeValueLabel.setBounds(0, 28, 140, 24);
+        timeValueLabel.setForeground(Color.WHITE);
+        timeValuePanel.add(timeValueLabel);
+        add(timeValuePanel);
+
+        timePlusButton = new JButton("+");
+        timePlusButton.setFont(new Font("SansSerif", Font.BOLD, 18));
+        timePlusButton.setBackground(new Color(95, 223, 120));
+        timePlusButton.setForeground(Color.WHITE);
+        timePlusButton.setFocusPainted(false);
+        timePlusButton.setBounds(266, 216, 68, 80);
+        add(timePlusButton);
+
+        // 3) 충전 정보
+        // 3-1) 금액 표시
+        chargeInfoPanel = new JPanel(null);
+        chargeInfoPanel.setBackground(Color.WHITE);
+        chargeInfoPanel.setBounds(16, 304, 100, 80);
+        chargeIcon = new JLabel(new ImageIcon("resources/coin_icon.png"));
+        chargeIcon.setBounds(30, 8, 40, 40);
+        chargeText = new JLabel("21,000,000", SwingConstants.CENTER);
+        chargeText.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        chargeText.setBounds(0, 52, 100, 16);
+        chargeInfoPanel.add(chargeIcon);
+        chargeInfoPanel.add(chargeText);
+        add(chargeInfoPanel);
+
+        // 3-2) 충전 버튼
+        chargeActionPanel = new JPanel(null);
+        chargeActionPanel.setBackground(new Color(95, 223, 120));
+        chargeActionPanel.setBounds(122, 304, 212, 80);
+        chargeButton = new JButton("CHARGE");
+        chargeButton.setFont(new Font("SansSerif", Font.BOLD, 18));
+        chargeButton.setForeground(Color.WHITE);
+        chargeButton.setFocusPainted(false);
+        chargeButton.setBounds(0, 20, 212, 40);
+        chargeActionPanel.add(chargeButton);
+        add(chargeActionPanel);
+
+        // 4) 로그아웃 아이콘
+        logoutButton = new JButton(new ImageIcon("resources/logout_icon.png"));
+        logoutButton.setBounds(286, 384, 48, 48);
+        logoutButton.setContentAreaFilled(false);
+        logoutButton.setBorderPainted(false);
+        add(logoutButton);
+    }
+
+    // 로그인 전/후 컴포넌트 토글
+    void updateDesign() {
+        boolean loggedIn = com.boardpcroom.ui.frame.MainScreenFrame.isLogin;
+        // 공통은 항상 보이지만, welcomeLabel 텍스트만 변경
+        welcomeLabel.setText(loggedIn
+            ? "Welcome! " + com.boardpcroom.ui.frame.MainScreenFrame.currentUser.getId()
+            : "Welcome!");
+
+        // before-login
+        loginButton.setVisible(!loggedIn);
+
+        // after-login
+        avatarPanel.setVisible(loggedIn);
+        separator.setVisible(loggedIn);
+        timeInfoPanel.setVisible(loggedIn);
+        timeValuePanel.setVisible(loggedIn);
+        timePlusButton.setVisible(loggedIn);
+        chargeInfoPanel.setVisible(loggedIn);
+        chargeActionPanel.setVisible(loggedIn);
+        logoutButton.setVisible(loggedIn);
+
+        revalidate();
+        repaint();
+    }
+
+    private class loginButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            com.boardpcroom.ui.dialog.LoginDialog loginF = new com.boardpcroom.ui.dialog.LoginDialog((JFrame) getTopLevelAncestor());
+            com.boardpcroom.model.User user = loginF.getLoggedInUser();
+            if (user != null) {
+                com.boardpcroom.ui.frame.MainScreenFrame.isLogin = true;
+                com.boardpcroom.ui.frame.MainScreenFrame.currentUser = user;
+                updateDesign();
+            } else {
+                System.err.println("Login failed.");
+            }
+        }
+    }
+}
+핵심 포인트
+null layout을 유지하면서 setBounds(x,y,width,height) 로 정확히 위치 지정
+
+로그인 전에는 loginButton 만, 로그인 후에는 아바타·시간·충전·로그아웃 컴포넌트를 보여주도록 updateDesign() 에서 setVisible(...) 처리
+
+리소스 폴더(resources/..._icon.png)에 아이콘 이미지를 두고 new ImageIcon(...) 으로 불러옴
+
+글꼴(Font)·색상(Color)·크기 등을 이미지 예시에 맞춰 설정
+
+이렇게 하면 첨부하신 시안처럼 로그인 전/후 두 가지 상태의 UI를 깔끔하게 구현할 수 있습니다.

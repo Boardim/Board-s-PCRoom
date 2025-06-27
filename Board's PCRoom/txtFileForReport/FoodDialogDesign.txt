@@ -1,0 +1,203 @@
+statusPanel에서 food 버튼을 클릭하면 해당 창이 뜨게하고싶어. 해당 창을 디자인해줄래? 위에 카테코리 4개는 각각 누를때 아래 해당하는 이미지, 가격, 이름 등이 변경돼
+
+ChatGPT의 말:
+
+4초 동안 생각함
+아래는 StatusPanel 의 “Order Food” 버튼을 눌렀을 때 띄울 수 있는 FoodDialog 예제입니다.
+상단에 4개의 카테고리 탭(라면, Snack, Drink, 밥)을 두고, 선택된 탭에 따라 중앙의 상품 목록이 바뀝니다.
+오른쪽에는 스크롤 가능한 체크리스트 패널, 아래에는 총합과 Checkout 버튼이 배치되어 있습니다.
+
+java
+복사
+편집
+package com.boardpcroom.ui.dialog;
+
+import com.boardpcroom.model.User;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+
+public class FoodDialog extends JDialog {
+    private final JPanel checklistPanel = new JPanel();
+    private final JLabel sumLabel = new JLabel("Total: 0원");
+    private int total = 0;
+
+    // 메뉴 데이터 (실제로는 DB나 CSV 로드)
+    private static final Map<String, List<MenuItem>> MENU = new LinkedHashMap<>();
+    static {
+        MENU.put("라면", Arrays.asList(
+            new MenuItem("신라면", 1000, "resources/ramen1.png"),
+            new MenuItem("진라면", 900,  "resources/ramen2.png"),
+            new MenuItem("너구리",   1100, "resources/ramen3.png")
+        ));
+        MENU.put("Snack", Arrays.asList(
+            new MenuItem("감자칩", 1500, "resources/snack1.png"),
+            new MenuItem("초코바", 1200, "resources/snack2.png")
+        ));
+        MENU.put("Drink", Arrays.asList(
+            new MenuItem("콜라",   1000, "resources/drink1.png"),
+            new MenuItem("사이다", 1000, "resources/drink2.png"),
+            new MenuItem("커피",   2000, "resources/drink3.png")
+        ));
+        MENU.put("밥", Arrays.asList(
+            new MenuItem("김치볶음밥", 4500, "resources/rice1.png"),
+            new MenuItem("계란밥",     3000, "resources/rice2.png")
+        ));
+    }
+
+    public FoodDialog(Frame owner, User user) {
+        super(owner, "Food Order", true);
+        setLayout(new BorderLayout(10,10));
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // 1) 상단: 카테고리 탭
+        JTabbedPane tabs = new JTabbedPane();
+        MENU.keySet().forEach(cat -> {
+            tabs.addTab(cat, createItemGrid(cat));
+        });
+        add(tabs, BorderLayout.CENTER);
+
+        // 2) 오른쪽: 체크리스트
+        checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+        JScrollPane checkScroll = new JScrollPane(checklistPanel,
+            JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        checkScroll.setPreferredSize(new Dimension(200, 300));
+        JPanel east = new JPanel(new BorderLayout(5,5));
+        east.setBorder(new EmptyBorder(0,0,0,10));
+        east.add(checkScroll, BorderLayout.CENTER);
+
+        // 합계 + Checkout
+        JPanel bottom = new JPanel(new BorderLayout(5,5));
+        sumLabel.setFont(sumLabel.getFont().deriveFont(Font.BOLD, 16f));
+        bottom.add(sumLabel, BorderLayout.CENTER);
+        JButton checkout = new JButton("Checkout");
+        checkout.addActionListener(e -> {
+            // TODO: 결제 로직 구현 (예: user.setPoint(user.getPoint()-total) 등)
+            JOptionPane.showMessageDialog(this,
+                "총 " + total + "원 결제되었습니다.",
+                "결제 완료", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        });
+        bottom.add(checkout, BorderLayout.SOUTH);
+
+        east.add(bottom, BorderLayout.SOUTH);
+        add(east, BorderLayout.EAST);
+
+        setSize(800, 500);
+        setLocationRelativeTo(owner);
+    }
+
+    // 해당 카테고리의 상품을 그리드로 보여주는 패널 생성
+    private JPanel createItemGrid(String category) {
+        List<MenuItem> items = MENU.get(category);
+        JPanel grid = new JPanel(new GridLayout(0, 3, 10,10));
+        grid.setBorder(new EmptyBorder(10,10,10,10));
+
+        for (MenuItem mi : items) {
+            JButton btn = new JButton();
+            btn.setLayout(new BorderLayout(5,5));
+            // 이미지
+            ImageIcon icon = new ImageIcon(mi.imagePath);
+            Image img = icon.getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH);
+            btn.add(new JLabel(new ImageIcon(img)), BorderLayout.CENTER);
+            // 이름 + 가격
+            String text = "<html><center>" + mi.name + "<br>" + mi.price + "원</center></html>";
+            btn.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.SOUTH);
+
+            btn.addActionListener(e -> addToChecklist(mi));
+            grid.add(btn);
+        }
+
+        JScrollPane sp = new JScrollPane(grid);
+        sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        return sp;
+    }
+
+    // 체크리스트에 한 줄 추가
+    private void addToChecklist(MenuItem mi) {
+        JPanel row = new JPanel(new BorderLayout(5,5));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        JLabel name = new JLabel(mi.name + " (" + mi.price + "원)");
+        row.add(name, BorderLayout.CENTER);
+
+        // 수량 조정 스피너
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 99, 1);
+        JSpinner spinner = new JSpinner(model);
+        spinner.addChangeListener(e -> updateTotal());
+        row.add(spinner, BorderLayout.WEST);
+
+        // 삭제 버튼
+        JButton del = new JButton("×");
+        del.setMargin(new Insets(0,5,0,5));
+        del.addActionListener(e -> {
+            checklistPanel.remove(row);
+            checklistPanel.revalidate();
+            checklistPanel.repaint();
+            updateTotal();
+        });
+        row.add(del, BorderLayout.EAST);
+
+        checklistPanel.add(row);
+        checklistPanel.revalidate();
+        updateTotal();
+    }
+
+    // 합계 계산
+    private void updateTotal() {
+        total = 0;
+        for (Component comp : checklistPanel.getComponents()) {
+            if (!(comp instanceof JPanel)) continue;
+            JPanel row = (JPanel)comp;
+            JLabel nameLbl = (JLabel)row.getComponent(0);
+            JSpinner spinner = (JSpinner)row.getComponent(1);
+            String text = nameLbl.getText();            // "이름 (가격원)"
+            int price = Integer.parseInt(
+                text.replaceAll(".*\\((\\d+)원\\).*", "$1")
+            );
+            int qty   = (Integer)spinner.getValue();
+            total += price * qty;
+        }
+        sumLabel.setText("Total: " + total + "원");
+    }
+
+    // 내부 메뉴 아이템 모델
+    private static class MenuItem {
+        final String name;
+        final int price;
+        final String imagePath;
+        public MenuItem(String name, int price, String imagePath) {
+            this.name = name;
+            this.price = price;
+            this.imagePath = imagePath;
+        }
+    }
+}
+주요 구성
+JTabbedPane: 4개 카테고리(라면, Snack, Drink, 밥)를 탭으로 표시
+
+상품 그리드: GridLayout + JScrollPane를 써서, 이미지·이름·가격이 있는 버튼을 나열
+
+체크리스트: BoxLayout을 이용해 수량용 JSpinner, 삭제 버튼과 함께 항목별로 추가
+
+합계 계산: 스피너 변경/삭제 시마다 updateTotal() 호출
+
+Checkout 버튼: 클릭하면 간단히 메시지와 함께 다이얼로그 닫기
+
+이대로 Order Food 버튼 리스너에서
+
+java
+복사
+편집
+new FoodDialog((Frame) SwingUtilities.getWindowAncestor(this), currentUser)
+    .setVisible(true);
+를 호출하시면, 스케치하신 화면과 유사한 식음료 주문 다이얼로그가 동작합니다.
+
+
+이후부터는 직접 구현하며
+private static final ArrayList<List<MenuItem>> = new ArrayList<>();
+해당 코드가 왜 안될까 << 이런 질문을 하였습니다.

@@ -1,0 +1,87 @@
+저 : 해당 코드에서, register 버튼을 누르면 register dialog가 뜨게끔 할 거야. dialog를 만들어줄래? dialog는 다음 내용을 포함해.
+
+ID : (textArea)
+PW : (textArea)
+name : (textArea)
+submit 버튼
+
+
+ChatGPT의 말:
+아주 좋습니다! registerBtn을 눌렀을 때 뜨는 회원가입용 다이얼로그(Register Dialog) 를 만들어드릴게요. 다이얼로그는 JDialog 클래스를 활용하면 되고, 버튼 이벤트 안에 넣어서 띄우면 됩니다.
+
+✅ 1. Register Dialog 만들기 (com.boardpcroom.ui.dialog.RegisterDialog 클래스)
+java
+복사
+편집
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class com.boardpcroom.ui.dialog.RegisterDialog extends JDialog {
+    public com.boardpcroom.ui.dialog.RegisterDialog(JFrame parent) {
+        super(parent, "Register", true); // 모달 다이얼로그
+
+        setLayout(null);
+
+        Font font = new Font(null, Font.PLAIN, 16);
+
+        JLabel idLabel = new JLabel("ID:");
+        JLabel pwLabel = new JLabel("PW:");
+        JLabel nameLabel = new JLabel("Name:");
+
+        JTextField idField = new JTextField();
+        JTextField pwField = new JTextField();
+        JTextField nameField = new JTextField();
+
+        JButton submitBtn = new JButton("Submit");
+
+        // 위치 지정
+        idLabel.setFont(font); idLabel.setBounds(30, 20, 60, 25);
+        pwLabel.setFont(font); pwLabel.setBounds(30, 60, 60, 25);
+        nameLabel.setFont(font); nameLabel.setBounds(30, 100, 60, 25);
+
+        idField.setBounds(100, 20, 150, 25);
+        pwField.setBounds(100, 60, 150, 25);
+        nameField.setBounds(100, 100, 150, 25);
+
+        submitBtn.setBounds(100, 140, 100, 30);
+
+        add(idLabel); add(idField);
+        add(pwLabel); add(pwField);
+        add(nameLabel); add(nameField);
+        add(submitBtn);
+
+        setSize(300, 230);
+        setLocationRelativeTo(parent); // 부모 중앙에 위치
+
+        // Submit 동작 정의 (여기서는 단순히 닫기)
+        submitBtn.addActionListener(e -> {
+            // TODO: 여기에 제출 로직 작성 가능
+            dispose(); // 다이얼로그 닫기
+        });
+    }
+}
+✅ 2. makeETCButton()에 버튼 리스너 추가
+java
+복사
+편집
+// REGISTER Button
+JButton registerBtn = new JButton("Register");
+registerBtn.setBounds(70, 30, 100, 30);
+registerBtn.addActionListener(e -> {
+    // 버튼 누르면 다이얼로그 띄우기
+    JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(jp);
+    com.boardpcroom.ui.dialog.RegisterDialog dialog = new com.boardpcroom.ui.dialog.RegisterDialog(topFrame);
+    dialog.setVisible(true);
+});
+jp.add(registerBtn);
+SwingUtilities.getWindowAncestor(jp)를 통해 현재 패널의 최상위 JFrame을 얻습니다.
+
+🧪 최종 구성 요약
+com.boardpcroom.ui.dialog.RegisterDialog 클래스는 따로 파일로 분리하거나 내부 클래스로 둬도 됩니다.
+
+JDialog는 모달 다이얼로그로 설정되어, 뜨면 그 창에 집중됩니다.
+
+Submit 버튼의 동작은 추후 회원정보 저장 로직을 추가하면 됩니다.
+
+필요하면 JPasswordField로 PW 필드를 바꿀 수도 있고, GridLayout으로 레이아웃도 개선할 수 있어요!
